@@ -16,4 +16,5 @@ private:
 	static void __fastcall SetMessageHandlerEx(void* _this, uint32_t unused, uint32_t opcode, void* function, void* param);
 
 	static void Packet_SMSG_UPDATE_CUSTOM_COMBAT_RATING(void* handlerParam, uint32_t opcode, uint32_t a2, CDataStore* a3);
+	static void Send_CMSG_CUSTOM_SYLIAN_PACKET();
 };

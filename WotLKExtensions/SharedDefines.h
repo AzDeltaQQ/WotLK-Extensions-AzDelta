@@ -10,11 +10,17 @@ static uint32_t dummy = 0;
 static std::unordered_map<char*, void*> luaFuncts;
 
 // enums
-enum CustomOpcodes
+enum CustomSMSG
 {
-	SMSG_UPDATE_CUSTOM_COMBAT_RATING			= 1311,
-	CMSG_TELEPORT_GRAVEYARD_REQUEST				= 1312,
-	NUM_CUSTOM_MSG_TYPES
+	CUSTOM_SMSG_BASE							= 1311,
+	SMSG_UPDATE_CUSTOM_COMBAT_RATING			= CUSTOM_SMSG_BASE,
+	NUM_CUSTOM_SMSG_OPCODES
+};
+
+enum CustomCMSG
+{
+	CMSG_TELEPORT_GRAVEYARD_REQUEST = 1410,
+	CMSG_CUSTOM_SYLIAN_PACKET = 1411
 };
 
 enum FrameXMLEvent : uint32_t
@@ -131,8 +137,8 @@ struct ChrClassesRow
 
 struct CustomNetClient
 {
-	void* handler[NUM_CUSTOM_MSG_TYPES - SMSG_UPDATE_CUSTOM_COMBAT_RATING];
-	void* handlerParam[NUM_CUSTOM_MSG_TYPES - SMSG_UPDATE_CUSTOM_COMBAT_RATING];
+	void* handler[NUM_CUSTOM_SMSG_OPCODES - CUSTOM_SMSG_BASE];
+	void* handlerParam[NUM_CUSTOM_SMSG_OPCODES - CUSTOM_SMSG_BASE];
 };
 
 struct MapRow
@@ -184,6 +190,7 @@ namespace CDataStore_C
 	CLIENT_FUNCTION(GetInt8, 0x47B340, __thiscall, void, (CDataStore*, int8_t*))
 	CLIENT_FUNCTION(PutInt8, 0x47AFE0, __thiscall, void, (CDataStore*, int8_t))
 	CLIENT_FUNCTION(GetInt16, 0x47B380, __thiscall, void, (CDataStore*, int16_t*))
+	CLIENT_FUNCTION(PutInt16, 0x47AFE0, __thiscall, void, (CDataStore*, int16_t))
 	CLIENT_FUNCTION(GetInt32, 0x47B3C0, __thiscall, void, (CDataStore*, int32_t*))
 	CLIENT_FUNCTION(PutInt32, 0x47B0A0, __thiscall, void, (CDataStore*, int32_t))
 	CLIENT_FUNCTION(GetInt64, 0x47B400, __thiscall, void, (CDataStore*, int64_t*))
