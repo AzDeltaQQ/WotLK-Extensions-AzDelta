@@ -23,6 +23,12 @@ enum CustomCMSG
 	CMSG_CUSTOM_SYLIAN_PACKET = 1411
 };
 
+enum DefaultBlizzardSMSG
+{
+	SMSG_SPELL_START = 305,
+	SMSG_SPELL_GO	 = 306
+};
+
 enum FrameXMLEvent : uint32_t
 {
 	EVENT_LFG_ROLE_UPDATE                       = 506,
@@ -197,6 +203,8 @@ namespace CDataStore_C
 	CLIENT_FUNCTION(GetCString, 0x47B480, __thiscall, void, (CDataStore*, char*, int32_t))
 	CLIENT_FUNCTION(PutCString, 0x47B300, __thiscall, void, (CDataStore*, char* string))
 	CLIENT_FUNCTION(Release, 0x403880, __thiscall, void, (CDataStore*))
+	CLIENT_FUNCTION(PutPackedGuid, 0x76DD00, __cdecl, void, (CDataStore*, int64_t))			// Not tested yet, just implemented.
+	CLIENT_FUNCTION(GetWoWGuid, 0x76DC20, __cdecl, void, (CDataStore*, int64_t*))
 }
 
 namespace CGChat
@@ -260,13 +268,16 @@ namespace DNInfo
 namespace FrameScript
 {
 	CLIENT_FUNCTION(DisplayError, 0x84F280, __cdecl, void, (lua_State* L, char*, ...))
-	CLIENT_FUNCTION(GetNumber, 0x84E030, __cdecl, double, (lua_State*, int32_t))
+	CLIENT_FUNCTION(GetNumber, 0x84E030, __cdecl, double, (lua_State*, int32_t))   // Also known as tonumber.
 	CLIENT_FUNCTION(GetParam, 0x815500, __cdecl, bool, (lua_State*, int, int))
-	CLIENT_FUNCTION(ToLString, 0x84E0E0, __cdecl, char*, (lua_State*, int, bool))
+	CLIENT_FUNCTION(ToLString, 0x84E0E0, __cdecl, char*, (lua_State*, int, bool))	// Also known as GetString
+	CLIENT_FUNCTION(IsString, 0x84DF60, __cdecl, char*, (lua_State*, int))
 	CLIENT_FUNCTION(IsNumber, 0x84DF20, __cdecl, int32_t, (lua_State*, int32_t))
 	CLIENT_FUNCTION(LoadFunctions, 0x5120E0, __cdecl, int, ())
 	CLIENT_FUNCTION(PushBoolean, 0x84E4D0, __cdecl, int, (lua_State* L, bool))
 	CLIENT_FUNCTION(PushNil, 0x84E280, __cdecl, int, (lua_State*))
+	CLIENT_FUNCTION(GetTop, 0x84DBD0, __cdecl, int, (lua_State* L, int))
+	CLIENT_FUNCTION(SetTop, 0x84DBF0, __cdecl, int, (lua_State* L, int))
 	CLIENT_FUNCTION(PushNumber, 0x84E2A0, __cdecl, int, (lua_State* L, double value))
 	CLIENT_FUNCTION(PushString, 0x84E350, __cdecl, int, (lua_State*, char const*))
 	CLIENT_FUNCTION(RegisterFunction, 0x817F90, __cdecl, int, (char*, void*))
