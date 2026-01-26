@@ -9,6 +9,25 @@ static uint32_t dummy = 0;
 
 static std::unordered_map<char*, void*> luaFuncts;
 
+namespace Addresses
+{
+	// DBC Databases
+	constexpr uintptr_t SPELL_DB						= 0xAD49D0;
+	constexpr uintptr_t SPELL_VISUAL_DB					= 0xAD4AA8;
+	constexpr uintptr_t SPELL_VISUAL_KIT_DB				= 0xAD4A3C;
+	constexpr uintptr_t SPELL_ICON_DB					= 0xAD488C;
+
+	// Functions
+	constexpr uintptr_t GET_SPELL_VISUAL_ROW = 0x007FA290;
+	constexpr uintptr_t GET_LOCALIZED_ROW = 0x4CFD20;
+	constexpr uintptr_t GET_ROW = 0x65C290;
+
+	// Client functions
+	constexpr uintptr_t PROCESS_MESSAGE = 0x631FE0;
+	constexpr uintptr_t SET_MESSAGE_HANDLER = 0x631FA0;
+	// ... add more as you find them
+}
+
 // enums
 enum CustomSMSG
 {
@@ -165,6 +184,7 @@ struct SpellRow
 	uint32_t padding0x230[30];
 };
 
+
 struct SpellVisualRec
 {
 	int32_t m_ID;
@@ -282,6 +302,7 @@ namespace CGUnit_C
 
 namespace ClientDB
 {
+	CLIENT_FUNCTION(GetSpellVisualRow, 0x007FA290, __cdecl, SpellVisualRec*, (void*))
 	CLIENT_FUNCTION(GetLocalizedRow, 0x4CFD20, __thiscall, int, (void*, uint32_t, void*))
 	CLIENT_FUNCTION(GetRow, 0x65C290, __thiscall, void*, (void*, uint32_t))
 	CLIENT_FUNCTION(GetGameTableValue, 0x7F6990, __cdecl, double, (uint32_t, uint32_t, uint32_t)) // this technically is not a part of ClientDB iirc but who cares
@@ -296,6 +317,7 @@ namespace ClientServices
 {
 	CLIENT_FUNCTION(InitializePlayer, 0x6E83B0, __cdecl, void, ())
 	CLIENT_FUNCTION(SendPacket, 0x6B0B50, __cdecl, void, (CDataStore*))
+	CLIENT_FUNCTION(GetCharacterClass, 0x6B1080, __cdecl, uint8_t, ())
 }
 
 namespace ClntObjMgr
@@ -383,4 +405,25 @@ namespace World
 	CLIENT_FUNCTION(Pos3Dto2D, 0x4F6D20, __fastcall, int, (void* This, void* edx, C3Vector* pos3d, C3Vector* pos2d, uint32_t* flags))
 }
 
-CLIENT_FUNCTION(sub_6B1080, 0x6B1080, __cdecl, uint8_t, ())
+namespace DB
+{
+	static void** g_spellDB										= (void**)Addresses::SPELL_DB;
+	static void** g_spellVisualDB								= (void**)Addresses::SPELL_VISUAL_DB;
+	static void** g_spellIconDB									= (void**)Addresses::SPELL_ICON_DB;
+	static void** g_spellVisualKitDB							= (void**)Addresses::SPELL_VISUAL_KIT_DB;
+
+	// Usage: uint32_t* dbPtr = *DB::g_spellDB;
+
+
+
+	// Helper function to get a database record
+	template<typename T>
+	inline T* GetRecord(void** db, uint32_t id)
+	{
+		if (!db || !*db) return nullptr;
+		// Database access logic here
+		return (T*)((uintptr_t)(*db) + (id * sizeof(T)));
+	}
+}
+
+

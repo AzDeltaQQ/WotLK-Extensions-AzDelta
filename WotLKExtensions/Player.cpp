@@ -56,7 +56,7 @@ void Player::LFDClassRoleExtension()
 
 uint32_t Player::CheckLFGRoles(uint32_t roles)
 {
-	uint32_t classId = sub_6B1080();
+	uint32_t classId = ClientServices::GetCharacterClass();
 
 	if (classId > *(uint32_t*)0xAD3410 || classId < *(uint32_t*)0xAD3414) // ChrClasses.dbc max/min indices
 		classId = 0;
