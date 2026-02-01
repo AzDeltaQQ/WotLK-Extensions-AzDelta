@@ -4,6 +4,8 @@
 #include "Util.h"
 #include "GameData/Addresses.h"
 
+typedef uint64_t WOWGUID;
+
 struct lua_State;
 
 static uint32_t dummy = 0;
@@ -52,6 +54,7 @@ enum TypeMask
 	TYPEMASK_CORPSE								= 0x0080,
 };
 
+
 // structures
 struct C2Vector
 {
@@ -66,16 +69,24 @@ struct C3Vector
 	float z;
 };
 
-struct CDataStore_vTable
+struct CDataStore__v_table
 {
-	uint32_t padding0x00[6];
-	void* IsRead;
-	uint32_t padding0x1C[3];
+	void* fn_InternalInitialize;
+	void* fn_InternalDestroy;
+	void* fn_InternalFetchRead;
+	void* fn_InternalFetchWrite;
+	void* fn_destructor;
+	void* fn_IsRead;
+	void* fn_Reset;
+	void* fn_Finalize;
+	void* fn_GetBufferParams;
+	void* fn_DetachBuffer;
+	void* fn_GetHeaderSpace;
 };
 
 struct CDataStore
 {
-	CDataStore_vTable* vTable;
+	CDataStore__v_table* vTable;
 	int32_t* m_buffer;
 	int32_t m_base;
 	int32_t m_alloc;
