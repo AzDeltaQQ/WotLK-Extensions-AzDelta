@@ -30,8 +30,8 @@ function SylianDevAddon:LoadDBCTab(parent)
     itemBtn:SetPoint("TOP", 0, yOffset)
     itemBtn:SetText("Reload Item.dbc")
     itemBtn:SetScript("OnClick", function()
-        if ChangeSpellVisual then
-            local success = ChangeSpellVisual()
+        if AttachToParentTestingFunction then
+            local success = AttachToParentTestingFunction()
             print("|cff" .. (success and "00ff00" or "ff0000") .. 
                   "Item.dbc reload " .. (success and "successful!" or "failed!") .. "|r")
         else

@@ -613,133 +613,91 @@ int CustomLua::HotReloadSpellDBC(lua_State* L) {
 	return 1;
 }
 
-// Just a testing name for now, when it works, will change name.
-int CustomLua::ChangeSpellVisual(lua_State* L)
+// Implemented by xidk (https://github.com/AzDeltaQQ)
+int CustomLua::AttachToParentTestingFunction(lua_State* L)
 {
+	char debugMsg[256];
+
+	// === VERIFIED ADDRESSES FROM IDA PRO ===
+	// CGUnit_C -> CM2Model* offset (CORRECTED from 0x88 to 0xB4)
+	const uintptr_t OFF_UNIT_MODEL = 0xB4;
+
+	// Step 1: Get active player GUID
 	uint64_t playerGUID = ClntObjMgr::GetActivePlayer();
-	void* pScene = *(void**)0xCD754C;
+	if (playerGUID == 0) {
+		CGChat::AddChatMessage("[AttachToParentTestingFunction] No active player found", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		return 0;
+	}
 
-	void* pMyModel = CM2Scene::CreateModel(pScene, "Spells\\ErrorCube.mdx", 0);
-	if (!pMyModel) return 0;
-
+	// Step 2: Get player object pointer
 	void* pPlayer = ClntObjMgr::ObjectPtr(playerGUID, TYPEMASK_PLAYER);
-	if (!pPlayer) return 0;
+	if (!pPlayer) {
+		CGChat::AddChatMessage("[AttachToParentTestingFunction] Failed to get player object pointer", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		return 0;
+	}
 
-	// Try different offsets to find the model
-	// Common offsets: 0x88, 0xA0, 0xA4, 0xA8, 0xAC
-	void* pPlayerModel = nullptr;
+	sprintf_s(debugMsg, "[AttachToParentTestingFunction] Player object at: 0x%p", pPlayer);
+	CGChat::AddChatMessage(debugMsg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-	for (int offset = 0x80; offset <= 0xB0; offset += 4) {
-		void* candidate = *(void**)((uintptr_t)pPlayer + offset);
-		if (candidate && (uintptr_t)candidate > 0x10000) {
-			// Quick check: does it look like a vtable?
-			void** vtable = *(void***)candidate;
-			if (vtable && (uintptr_t)vtable > 0x400000 && (uintptr_t)vtable < 0x900000) {
-				pPlayerModel = candidate;
-				break;
-			}
+	// Step 3: Get the M2 scene pointer
+	void* pScene = *(void**)Globals::CGWorldScene__m2Scene;
+	if (!pScene) {
+		CGChat::AddChatMessage("[AttachToParentTestingFunction] World Scene not initialized", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		return 0;
+	}
+
+	// Step 4: Create the model
+	void* pChildModel = CM2Scene::CreateModel(pScene, "Spells\\ErrorCube.mdx", 0);
+	if (!pChildModel) {
+		CGChat::AddChatMessage("[AttachToParentTestingFunction] Failed to create model", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		return 0;
+	}
+
+	sprintf_s(debugMsg, "[AttachToParentTestingFunction] Model created at: 0x%p", pChildModel);
+	CGChat::AddChatMessage(debugMsg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	// Step 5: Get player's internal model pointer at CORRECT offset 0xB4
+	// This was verified in CGObject_C__AddWorldObject at 0x743767
+	void* pParentModel = *(void**)((uintptr_t)pPlayer + OFF_UNIT_MODEL);
+
+	if (!pParentModel) {
+		CGChat::AddChatMessage("[AttachToParentTestingFunction] Player model not loaded (not fully initialized?)", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		return 0;
+	}
+
+	sprintf_s(debugMsg, "[AttachToParentTestingFunction] Player model at: 0x%p (offset 0xB4)", pParentModel);
+	CGChat::AddChatMessage(debugMsg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	// Step 6: Attach child model to parent model
+	// Signature from CGlueMgr::ProcessAttachment (0x4E2C30):
+	// void __thiscall AttachToParent(CM2Model* pChild, CM2Model* pParent, int boneId, int unk1, int unk2)
+	// Bone IDs: 0 = Root/Feet, 14 = Right Hand, 25 = Left Hand (varies by race model)
+	int boneId = 0;  // Attach at root (player's feet)
+
+	__try {
+		// Call: ECX = pChildModel, Stack = pParentModel, boneId, 0, 0
+		CM2Model::AttachToParent(pChildModel, pParentModel, boneId, 0, 0);
+
+		// Force visibility flag to ensure model is rendered
+		// This tells the engine the model is part of the scene graph
+		__try {
+			*(uint32_t*)((uintptr_t)pChildModel + 0x10) |= 0x8000;
 		}
+		__except (EXCEPTION_EXECUTE_HANDLER) {
+			CGChat::AddChatMessage("[AttachToParentTestingFunction] Warning: Could not set visibility flag", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		}
+
+		sprintf_s(debugMsg, "[AttachToParentTestingFunction] SUCCESS! Model attached to bone %d", boneId);
+		CGChat::AddChatMessage(debugMsg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		CGChat::AddChatMessage("[AttachToParentTestingFunction] ErrorCube should now be visible at your feet!", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
-
-	if (!pPlayerModel) {
-		// Try a more common approach: look for model in CGUnit_C
-		// The model might be in CGUnit_C + 0x9C0 or similar
-		void* pUnit = (void*)((uintptr_t)pPlayer + 0x9C0);
-		pPlayerModel = *(void**)pUnit;
-	}
-
-	if (!pPlayerModel) return 0;
-
-	// Prepare parameters
-	unsigned int attachmentPoint = 0xFFFFFFFF;  // -1 = no specific bone
-	float vecOffset[3] = { 0.0f, 0.0f, 2.0f };  // 2 units above
-	int flags = 1;  // Usually 1 for scale
-
-	// Call using __thiscall - correct inline assembly
-	__asm {
-		// Push parameters in reverse order
-		push flags          // a5 (int)
-		lea eax, vecOffset  // a4 (C3Vector*)
-		push eax
-		push attachmentPoint // a3 (unsigned int)
-		push pPlayerModel   // a2 (void* parent model)
-
-		// Set ECX to 'this' pointer (the model to attach)
-		mov ecx, pMyModel
-
-		// Call the function
-		mov eax, 0x831630   // Function address
-		call eax
-
-		// Clean up stack (4 parameters * 4 bytes = 16)
-		add esp, 16
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+		sprintf_s(debugMsg, "[AttachToParentTestingFunction] CRASH AVOIDED - AttachToParent failed at 0x%X", CM2Scene_Addresses::ADDR_ATTACH_PARENT);
+		CGChat::AddChatMessage(debugMsg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 
 	return 0;
 }
-
-/*
-int CustomLua::ChangeSpellVisual(lua_State* L)
-{
-	uint64_t playerGUID = ClntObjMgr::GetActivePlayer();
-
-
-
-    // Get the global scene pointer
-    void* pScene = *(void**)0xCD754C; // Address of CWorldScene__s_m2Scene
-    
-	void* pMyModel = CM2Scene::CreateModel(pScene, "Spells\\ErrorCube.mdx", 0);
-	if (!pMyModel) return 0;
-
-	void* pPlayer = ClntObjMgr::ObjectPtr(playerGUID, TYPEMASK_PLAYER);
-
-	if (pPlayer)
-	{
-		// 4. Get Player's Model Ptr
-		// In CGUnit_C, offset 0xA30 usually holds pointers to visual data, 
-		// usually M2Model is at +0x88 or derived. 
-		// For simplicity, let's assume we want to attach to the main model.
-		// CGObject_C + 0x88 is often the CM2Model* for the unit.
-		int pPlayerModel = *(int*)((uintptr_t)pPlayer + 0x88);
-
-		if (pPlayerModel)
-		{
-			
-			int scale = 1.0f;
-
-			C3Vector offset = { 0.0f, 2.0f, 0.0f };  // 2 units above
-
-			// Use assembly to call __thiscall
-#ifdef _MSC_VER
-			__asm {
-				push 1                    // flags
-				lea eax, offset
-				push eax
-				push attachmentPoint
-				push pPlayerModel
-				mov ecx, pMyModel
-				call 0x831630
-				add esp, 16
-			}
-#endif
-
-
-
-			// this = pMyModel
-			//CM2Model::AttachToParent(pMyModel, pPlayerModel, testVector, scale);
-			/*
-			// 6. Set Flag to Force Update/Render
-			// This maybe works, but the above line crashes the game.
-			// 0x10 is flags offset in CM2Model. 0x8000 is often "Visible/Active"
-			*(uint32_t*)((uintptr_t)pMyModel + 0x10) |= 0x8000;
-			
-			return 0;
-		}
-	}
-
-    return 0;
-}
-*/
 
 void CustomLua::AddToFunctionMap(char* name, void* ptr)
 {
@@ -777,7 +735,7 @@ void CustomLua::RegisterFunctions()
 		AddToFunctionMap("ToggleWMO", &ToggleWMO);
 		AddToFunctionMap("GetLocalPlayer", &GetLocalPlayer);
 		AddToFunctionMap("HotReloadSpellDBC", &HotReloadSpellDBC);
-		AddToFunctionMap("ChangeSpellVisual", &ChangeSpellVisual);
+		AddToFunctionMap("AttachToParentTestingFunction", &AttachToParentTestingFunction);
 	}
 
 	if (customPackets)

@@ -293,3 +293,11 @@ namespace CGPlayer_Vitrual_Functions {
 	constexpr uintptr_t CGPLAYER_IS_DEAD_OR_GHOST = 0x6DAC10;
 
 }
+
+namespace CM2Scene_Addresses {
+	constexpr uintptr_t ADDR_ATTACH_PARENT = 0x831630;
+}
+
+namespace CM2Model_Addresses {
+	constexpr uintptr_t ADDR_CREATE_MODEL = 0x81F8F0;
+}

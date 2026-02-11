@@ -44,7 +44,7 @@ private:
 
 	static int HotReloadSpellDBC(lua_State* L);
 
-	static int ChangeSpellVisual(lua_State* L);
+	static int AttachToParentTestingFunction(lua_State* L);
 
 	static int HotPatchItem(lua_State* L);
 
