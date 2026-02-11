@@ -12,6 +12,10 @@ static uint32_t dummy = 0;
 
 static std::unordered_map<char*, void*> luaFuncts;
 
+// Function signature
+typedef void(__thiscall* WowClientDB__SpellRec__LoadDB_t)(uintptr_t thisptr, char* filename, int32_t ExitCode);
+
+
 // enums
 enum CustomSMSG
 {
@@ -96,8 +100,9 @@ enum Globals
 	CVar_MaxFPS = 0x00C5DF7C,                   // 3.3.5a 12340
 	CGWorldFrame__RenderWorld = 0x004FAF90,     // 3.3.5a 12340
 	CGWorldFrame__Intersect = 0x0077F310,       // 3.3.5a 12340
+	// CWorldScene::s_m2Scene - Global pointer to M2 scene manager
+	CGWorldScene__m2Scene	= 0x00CD754C,
 };
-
 
 // structures
 struct C2Vector
@@ -389,7 +394,7 @@ namespace FrameScript
 	CLIENT_FUNCTION(GetNumber, 0x84E030, __cdecl, double, (lua_State*, int32_t))   // Also known as tonumber.
 	CLIENT_FUNCTION(GetParam, 0x815500, __cdecl, bool, (lua_State*, int, int))
 	CLIENT_FUNCTION(ToLString, 0x84E0E0, __cdecl, char*, (lua_State*, int, bool))	// Also known as GetString
-	CLIENT_FUNCTION(ToBoolean, 0x84E0B0, __cdecl, char*, (lua_State*, int, bool))	// Also known as GetString
+	CLIENT_FUNCTION(ToBoolean, 0x84E0B0, __cdecl, char*, (lua_State*, int))	// Also known as GetBoolean
 	CLIENT_FUNCTION(IsString, 0x84DF60, __cdecl, char*, (lua_State*, int))
 	CLIENT_FUNCTION(IsNumber, 0x84DF20, __cdecl, int32_t, (lua_State*, int32_t))
 	CLIENT_FUNCTION(LoadFunctions, 0x5120E0, __cdecl, int, ())
@@ -442,4 +447,17 @@ namespace World
 	CLIENT_FUNCTION(LoadMap, 0x781430, __cdecl, void, (char*, C3Vector*, uint32_t))
 	CLIENT_FUNCTION(UnloadMap, 0x783180, __cdecl, void, ())
 	CLIENT_FUNCTION(Pos3Dto2D, 0x4F6D20, __fastcall, int, (void* This, void* edx, C3Vector* pos3d, C3Vector* pos2d, uint32_t* flags))
+}
+
+namespace CM2Scene {
+	// CM2Scene::CreateModel - Creates a new M2 model instance
+	CLIENT_FUNCTION(CreateModel, CM2Model_Addresses::ADDR_CREATE_MODEL, __thiscall, void*,
+		(void* pScene, const char* szModel, uint32_t flags))
+}
+
+namespace CM2Model {
+
+	// CM2Model::AttachToParent - Attaches child model to parent model
+	CLIENT_FUNCTION(AttachToParent, CM2Scene_Addresses::ADDR_ATTACH_PARENT, __thiscall, void,
+		(void* pChild, void* pParent, int boneId, int unk1, int unk2))
 }
