@@ -42,7 +42,7 @@ private:
 	static int ToggleWMO(lua_State* L);
 	static int GetLocalPlayer(lua_State* L);
 
-	static int HotReloadSpellDBC(lua_State* L);
+	static int HotReloadDBC(lua_State* L);
 
 	static int AttachToParentTestingFunction(lua_State* L);
 

@@ -5,57 +5,62 @@ function SylianDevAddon:LoadDBCTab(parent)
     -- Title
     local title = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOP", 0, yOffset)
-    title:SetText("|cff00ccffDBC Hot Reload Tools|r")
+    title:SetText("|cff00ccffDBC Hot Reload Tool|r")
     yOffset = yOffset - 30
-    
-    -- Spell DBC Reload
-    local spellBtn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    spellBtn:SetSize(200, 30)
-    spellBtn:SetPoint("TOP", 0, yOffset)
-    spellBtn:SetText("Reload Spell.dbc")
-    spellBtn:SetScript("OnClick", function()
-        if HotReloadSpellDBC then
-            local success = HotReloadSpellDBC()
-            print("|cff" .. (success and "00ff00" or "ff0000") .. 
-                  "Spell.dbc reload " .. (success and "successful!" or "failed!") .. "|r")
-        else
-            print("|cffff0000HotReloadSpellDBC function not found|r")
-        end
+	
+	-- DBC Name input box
+	local editBox = CreateFrame("EditBox", "DBCReloadEditBox", parent, "InputBoxTemplate")
+	editBox:SetSize(200, 24)
+	editBox:SetPoint("TOP", 0, yOffset)
+	editBox:SetAutoFocus(false)
+	editBox:SetScript("OnEnterPressed", function(self)
+		self:ClearFocus()
+		reloadDBC(editBox:GetText());
+	end)
+	yOffset = yOffset - 30
+	
+    -- DBC Reloader
+    local dbcReloadBtn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+    dbcReloadBtn:SetSize(200, 30)
+    dbcReloadBtn:SetPoint("TOP", 0, yOffset)
+    dbcReloadBtn:SetText("Reload DBC")
+    dbcReloadBtn:SetScript("OnClick", function()
+	
+		reloadDBC(editBox:GetText())
     end)
     yOffset = yOffset - 40
     
-    -- Item DBC Reload
-    local itemBtn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    itemBtn:SetSize(200, 30)
-    itemBtn:SetPoint("TOP", 0, yOffset)
-    itemBtn:SetText("Reload Item.dbc")
-    itemBtn:SetScript("OnClick", function()
-        if AttachToParentTestingFunction then
-            local success = AttachToParentTestingFunction()
-            print("|cff" .. (success and "00ff00" or "ff0000") .. 
-                  "Item.dbc reload " .. (success and "successful!" or "failed!") .. "|r")
-        else
-            print("|cffff0000HotReloadItemDBC function not found|r")
-        end
-    end)
-    yOffset = yOffset - 40
+end
+
+function reloadDBC(inputText)
+    local name = inputText;
     
-    -- HotPatch Item Name
-    local hotpatchBtn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    hotpatchBtn:SetSize(200, 30)
-    hotpatchBtn:SetPoint("TOP", 0, yOffset)
-    hotpatchBtn:SetText("HotPatch Item Name")
-    hotpatchBtn:SetScript("OnClick", function()
-        if HotPatchItem then
-            local success, oldName, newName = HotPatchItem()
-            if success then
-                print("|cff00ff00Item name changed from '" .. (oldName or "?") .. 
-                      "' to '" .. (newName or "?") .. "'|r")
-            else
-                print("|cffff0000HotPatchItem failed|r")
-            end
+    -- Check if name is empty or just whitespace
+    if name and name:match("^%s*$") then
+        name = nil
+    end
+    
+    if name then
+        -- Call the global HotReloadDBC function with the name
+        if HotReloadDBC then
+            HotReloadDBC(name)
+            statusText:SetText("Reloading DBC: " .. name)
+            statusText:SetTextColor(0, 1, 0)
         else
-            print("|cffff0000HotPatchItem function not found|r")
+            statusText:SetText("Error: HotReloadDBC not available")
+            statusText:SetTextColor(1, 0, 0)
+            print("HotReloadDBC function not available in this client build.")
         end
-    end)
+    else
+        -- No name: call without argument to reload all
+        if HotReloadDBC then
+            HotReloadDBC()
+            statusText:SetText("Reloading all DBCs...")
+            statusText:SetTextColor(0, 1, 0)
+        else
+            statusText:SetText("Error: HotReloadDBC not available")
+            statusText:SetTextColor(1, 0, 0)
+            print("HotReloadDBC function not available in this client build.")
+        end
+    end
 end

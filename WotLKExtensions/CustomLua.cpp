@@ -1,8 +1,8 @@
 #include "CustomLua.h"
 #include "Player.h"
-#include "GameData/Database.h"
 #include "CDBCMgr/CDBCDefs/LFGRoles.h"
 #include "GameObjects/CGObject.h"
+#include <DBCReloader/DBCReloader.h>
 
 void CustomLua::Apply()
 {
@@ -577,40 +577,28 @@ int CustomLua::GetLocalPlayer(lua_State* L) {
 	return 0;
 }
 
-int CustomLua::HotReloadSpellDBC(lua_State* L) {
-	// Addresses
-	const uintptr_t DBCLIENT_BASE = 0x626E8C;
-	const uint32_t SPELL_DBC_ID = 404;
+int CustomLua::HotReloadDBC(lua_State* L) {
 
-	// Mark as not loaded
-	WowClientDB_Base* ploader = (WowClientDB_Base*)DBCGloabls::g_spellDB;
-	ploader->m_loaded = 0;
-	ploader->m_numRecords = 0;
+    int result = -1;
 
-	// Get vtable and load function
-	uintptr_t vtable = *(uintptr_t*)DBCGloabls::g_spellDB;
-	uintptr_t loadFunction = *(uintptr_t*)(vtable + 4);
+    if (FrameScript::GetTop(L, 1) >= 1 && FrameScript::IsString(L, 1)) {
+        const char* name = FrameScript::ToLString(L, 1, 0);
+        result = DBCReloader::ReloadDBCByName(name);
+        if (result == 0)
+            CGChat::AddChatMessage("DBC reloaded successfully.", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        else
+            CGChat::AddChatMessage("DBC reload failed: name not found or error.", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
+    else {
+        result = DBCReloader::LoadAllDBCs();
+        if (result == 0)
+            CGChat::AddChatMessage("All DBCs reloaded successfully.", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        else
+            CGChat::AddChatMessage("Reloading all DBCs failed.", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
 
-	// Call the load function
-	__try {
-		__asm {
-			push SPELL_DBC_ID       // Push dbc_id (404)
-			push DBCLIENT_BASE      // Push dbc_base (0x626E8C)
-			mov ecx, DBCGloabls::g_spellDB           // Set this pointer
-			mov eax, vtable
-			mov eax, [eax + 4]        // Get load function address
-			call eax                // Call it
-		}
-
-		CGChat::AddChatMessage("Spell.dbc hot reloaded successfully!", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		FrameScript::PushBoolean(L, true);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER) {
-		CGChat::AddChatMessage("Spell.dbc reload failed - crash occurred", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		FrameScript::PushBoolean(L, false);
-	}
-
-	return 1;
+    FrameScript::PushBoolean(L, result == 0);
+    return 1;
 }
 
 // Implemented by xidk (https://github.com/AzDeltaQQ)
@@ -734,7 +722,7 @@ void CustomLua::RegisterFunctions()
 		AddToFunctionMap("ToggleWireframeMode", &ToggleWireframeMode);
 		AddToFunctionMap("ToggleWMO", &ToggleWMO);
 		AddToFunctionMap("GetLocalPlayer", &GetLocalPlayer);
-		AddToFunctionMap("HotReloadSpellDBC", &HotReloadSpellDBC);
+		AddToFunctionMap("HotReloadDBC", &HotReloadDBC);
 		AddToFunctionMap("AttachToParentTestingFunction", &AttachToParentTestingFunction);
 	}
 

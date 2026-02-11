@@ -2,6 +2,9 @@
 #pragma once
 #include <cstdint>
 
+// Base needed to call the load function of WowClientDB
+const uintptr_t DBCLIENT_BASE = 0x626E8C;
+
 namespace DBCAddresses
 {
 	// DBCs
