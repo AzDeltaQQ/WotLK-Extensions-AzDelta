@@ -1,0 +1,21 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default Config",
+      "description": "Default build configuration",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build",
+      "architecture": {
+        "value": "Win32",
+        "strategy": "set"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LOG_LEVEL": "DEBUG",
+        "WOW_CLIENT_PATH": "C:/path/to/your/wow/client"
+      }
+    }
+  ]
+}
