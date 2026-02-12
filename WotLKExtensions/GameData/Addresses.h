@@ -269,14 +269,6 @@ namespace CacheAddresses {
 
 namespace FuncAddresses {
 
-# pragma region Client-Manager
-
-	constexpr uintptr_t INITIALIZE_PLAYER = 0x6E83B0;
-	constexpr uintptr_t GET_ACTIVE_PLAYER = 0x4D3790;
-	constexpr uintptr_t GET_OBJECT_PTR = 0x4D4DB0;
-
-# pragma endregion
-
 	constexpr uintptr_t DB_ITEM_CACHE_GET_INFO_BLOCK_BY_ID = 0x67CA30;
 
 
@@ -285,8 +277,38 @@ namespace FuncAddresses {
 	constexpr uintptr_t GET_LOCALIZED_ROW = 0x4CFD20;
 	constexpr uintptr_t GET_ROW = 0x65C290;
 	constexpr uintptr_t GET_GAME_TABLE_VALUE = 0x7F6990;
+}
 
-	// Client functions
+namespace CDataStore_C_Addresses {
+	constexpr uintptr_t GEN_PACKET = 0x401050;
+	constexpr uintptr_t GET_INT8 = 0x47B340;
+	constexpr uintptr_t PUT_INT8 = 0x47AFE0;
+	constexpr uintptr_t GET_INT16 = 0x47B380;
+	constexpr uintptr_t PUT_INT16 = 0x47AFE0;
+	constexpr uintptr_t GET_INT32 = 0x47B3C0;
+	constexpr uintptr_t PUT_INT32 = 0x47B0A0;
+	constexpr uintptr_t GET_INT64 = 0x47B400;
+	constexpr uintptr_t GET_CSTRING = 0x47B480;
+	constexpr uintptr_t PUT_CSTRING = 0x47B300;
+	constexpr uintptr_t RELEASE = 0x403880;
+	constexpr uintptr_t PUT_PACKED_GUID = 0x76DD00;			// Not tested yet, just implemented.
+	constexpr uintptr_t GET_WOW_GUID = 0x76DC20;
+}
+
+namespace ClntObjMgr
+{
+	constexpr uintptr_t GET_ACTIVE_PLAYER = 0x4D3790;
+	constexpr uintptr_t GET_OBJECT_PTR = 0x4D4DB0;
+	constexpr uintptr_t ENUM_VISIBLE_OBJECTS = 0x004D4B30;
+}
+
+namespace ClientServices {
+	constexpr uintptr_t INITIALIZE_PLAYER = 0x6E83B0;
+	constexpr uintptr_t SEND_PACKET = 0x6B0B50;
+	constexpr uintptr_t GET_CHARACTER_CLASS = 0x6B1080;
+}
+
+namespace CNetClient {
 	constexpr uintptr_t PROCESS_MESSAGE = 0x631FE0;
 	constexpr uintptr_t SET_MESSAGE_HANDLER = 0x631FA0;
 }
@@ -303,4 +325,6 @@ namespace CM2Scene_Addresses {
 
 namespace CM2Model_Addresses {
 	constexpr uintptr_t ADDR_CREATE_MODEL = 0x81F8F0;
+	constexpr uintptr_t ADDR_REPLACE_TEXTURE = 0x825260;
+	constexpr uintptr_t ADDR_INIT_LOADED = 0x832EA0;
 }

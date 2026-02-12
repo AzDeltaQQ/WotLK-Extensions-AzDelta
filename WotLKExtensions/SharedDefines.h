@@ -312,19 +312,22 @@ struct ZoneLightData
 // Client functions
 namespace CDataStore_C
 {
-	CLIENT_FUNCTION(GenPacket, 0x401050, __thiscall, void, (CDataStore*))
-	CLIENT_FUNCTION(GetInt8, 0x47B340, __thiscall, void, (CDataStore*, int8_t*))
-	CLIENT_FUNCTION(PutInt8, 0x47AFE0, __thiscall, void, (CDataStore*, int8_t))
-	CLIENT_FUNCTION(GetInt16, 0x47B380, __thiscall, void, (CDataStore*, int16_t*))
-	CLIENT_FUNCTION(PutInt16, 0x47AFE0, __thiscall, void, (CDataStore*, int16_t))
-	CLIENT_FUNCTION(GetInt32, 0x47B3C0, __thiscall, void, (CDataStore*, int32_t*))
-	CLIENT_FUNCTION(PutInt32, 0x47B0A0, __thiscall, void, (CDataStore*, int32_t))
-	CLIENT_FUNCTION(GetInt64, 0x47B400, __thiscall, void, (CDataStore*, int64_t*))
-	CLIENT_FUNCTION(GetCString, 0x47B480, __thiscall, void, (CDataStore*, char*, int32_t))
-	CLIENT_FUNCTION(PutCString, 0x47B300, __thiscall, void, (CDataStore*, char* string))
-	CLIENT_FUNCTION(Release, 0x403880, __thiscall, void, (CDataStore*))
-	CLIENT_FUNCTION(PutPackedGuid, 0x76DD00, __cdecl, void, (CDataStore*, int64_t))			// Not tested yet, just implemented.
-	CLIENT_FUNCTION(GetWoWGuid, 0x76DC20, __cdecl, void, (CDataStore*, int64_t*))
+	CLIENT_FUNCTION(GenPacket, CDataStore_C_Addresses::GEN_PACKET, __thiscall, void, (CDataStore*))
+
+	CLIENT_FUNCTION(GetInt8, CDataStore_C_Addresses::GET_INT8, __thiscall, void, (CDataStore*, int8_t*))
+	CLIENT_FUNCTION(GetInt16, CDataStore_C_Addresses::GET_INT16, __thiscall, void, (CDataStore*, int16_t*))
+	CLIENT_FUNCTION(GetInt32, CDataStore_C_Addresses::GET_INT32, __thiscall, void, (CDataStore*, int32_t*))
+	CLIENT_FUNCTION(GetInt64, CDataStore_C_Addresses::GET_INT64, __thiscall, void, (CDataStore*, int64_t*))
+	CLIENT_FUNCTION(GetCString, CDataStore_C_Addresses::GET_CSTRING, __thiscall, void, (CDataStore*, char*, int32_t))
+	CLIENT_FUNCTION(GetWoWGuid, CDataStore_C_Addresses::GET_WOW_GUID, __cdecl, void, (CDataStore*, int64_t*))
+
+	CLIENT_FUNCTION(PutInt8, CDataStore_C_Addresses::PUT_INT8, __thiscall, void, (CDataStore*, int8_t))
+	CLIENT_FUNCTION(PutInt16, CDataStore_C_Addresses::PUT_INT16, __thiscall, void, (CDataStore*, int16_t))
+	CLIENT_FUNCTION(PutInt32, CDataStore_C_Addresses::PUT_INT32, __thiscall, void, (CDataStore*, int32_t))
+	CLIENT_FUNCTION(PutCString, CDataStore_C_Addresses::PUT_CSTRING, __thiscall, void, (CDataStore*, char* string))
+	CLIENT_FUNCTION(PutPackedGuid, CDataStore_C_Addresses::PUT_PACKED_GUID, __cdecl, void, (CDataStore*, int64_t))			// Not tested yet, just implemented.
+
+	CLIENT_FUNCTION(Release, CDataStore_C_Addresses::RELEASE, __thiscall, void, (CDataStore*))
 }
 
 namespace CGChat
@@ -358,21 +361,22 @@ namespace ClientPacket
 
 namespace ClientServices
 {
-	CLIENT_FUNCTION(InitializePlayer, FuncAddresses::INITIALIZE_PLAYER, __cdecl, void, ())
-	CLIENT_FUNCTION(SendPacket, FuncAddresses::GET_ACTIVE_PLAYER, __cdecl, void, (CDataStore*))
-	CLIENT_FUNCTION(GetCharacterClass, 0x6B1080, __cdecl, uint8_t, ())
+	CLIENT_FUNCTION(InitializePlayer, ClientServices::INITIALIZE_PLAYER, __cdecl, void, ())
+	CLIENT_FUNCTION(SendPacket, ClientServices::SEND_PACKET, __cdecl, void, (CDataStore*))
+	CLIENT_FUNCTION(GetCharacterClass, ClientServices::GET_CHARACTER_CLASS, __cdecl, uint8_t, ())
 }
 
 namespace ClntObjMgr
 {
-	CLIENT_FUNCTION(GetActivePlayer, FuncAddresses::GET_ACTIVE_PLAYER, __cdecl, uint64_t, ())
-	CLIENT_FUNCTION(ObjectPtr, FuncAddresses::GET_OBJECT_PTR, __cdecl, void*, (uint64_t, uint32_t))
+	CLIENT_FUNCTION(GetActivePlayer, ClntObjMgr::GET_ACTIVE_PLAYER, __cdecl, uint64_t, ())
+	CLIENT_FUNCTION(ObjectPtr, ClntObjMgr::GET_OBJECT_PTR, __cdecl, void*, (uint64_t, uint32_t))
+	CLIENT_FUNCTION(EnumVisibleObjects, ClntObjMgr::GET_OBJECT_PTR, __cdecl, void*, (uint64_t, uint32_t))
 }
 
 namespace CNetClient
 {
-	CLIENT_FUNCTION(ProcessMessage, 0x631FE0, __thiscall, int, (void*, uint32_t, CDataStore*, uint32_t))
-	CLIENT_FUNCTION(SetMessageHandler, 0x631FA0, __thiscall, void, (void*, uint32_t, void*, void*))
+	CLIENT_FUNCTION(ProcessMessage, CNetClient::PROCESS_MESSAGE, __thiscall, int, (void*, uint32_t, CDataStore*, uint32_t))
+	CLIENT_FUNCTION(SetMessageHandler, CNetClient::SET_MESSAGE_HANDLER, __thiscall, void, (void*, uint32_t, void*, void*))
 }
 
 namespace CVar
@@ -460,4 +464,11 @@ namespace CM2Model {
 	// CM2Model::AttachToParent - Attaches child model to parent model
 	CLIENT_FUNCTION(AttachToParent, CM2Scene_Addresses::ADDR_ATTACH_PARENT, __thiscall, void,
 		(void* pChild, void* pParent, int boneId, int unk1, int unk2))
+
+
+	CLIENT_FUNCTION(ReplaceTexture, CM2Model_Addresses::ADDR_REPLACE_TEXTURE, __thiscall, void,
+		(int model, int unk1, const char* textureBlock))
+
+	CLIENT_FUNCTION(InitializeLoaded, CM2Model_Addresses::ADDR_INIT_LOADED, __thiscall, int,
+		(int pThis))
 }
