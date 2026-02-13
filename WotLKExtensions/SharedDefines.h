@@ -478,15 +478,27 @@ namespace CTexture
 	// TextureCreate - Creates a texture from file/data
 	// Parameters: a1 = texture path/name, a2 = ?, a3 = ?, a4 = ?
 	// NOTE: Not tested yet, I simply added it so it would be easier for you ma dude :D
-	CLIENT_FUNCTION(Create, CTexture_Addresses::ADDR_TEXTURE_CREATE_3, __cdecl, int,
+	CLIENT_FUNCTION(Create_3, CTexture_Addresses::ADDR_TEXTURE_CREATE_3, __cdecl, int,
 		(char* textureBlock, int a2, int a3, int a4))
+
+	CLIENT_FUNCTION(Create, CTexture_Addresses::ADDR_TEXTURE_CREATE, __cdecl, int,
+		(int a1, unsigned int a2, unsigned int a3, int a4, int a5, int a6, int a7, int a8, int a9, char* a10, int a11))
+
+	CLIENT_FUNCTION(CreateBlob, CTexture_Addresses::ADDR_TEXTURE_CREATE_BLOB, __cdecl, int,
+		(char* a1, int a2, int a3, int a4))
+
+	CLIENT_FUNCTION(CreateSolid, CTexture_Addresses::ADDR_TEXTURE_CREATE_SOLID, __cdecl, int,
+		(int* a1))
 }
 
 namespace CGxTexFlags
 {
 	// NOTE: Not tested yet, I simply added it so it would be easier for you ma dude :D
 	CLIENT_FUNCTION(TexConstructor, CGxTexFlags_Addresses::ADDR_CONSTRUCTOR, __thiscall, uint32_t,
-		(uint32_t* pThis, int a2, char* a3, char* a4, char* a5, char* a6, char* a7, uint32_t a8, char* a9, char* a10, char* a11))
+		(unsigned int* pThis, int a2, char* a3, char* a4, char* a5, char* a6, char* a7, unsigned int a8, char* a9, char* a10, char* a11))
+
+	CLIENT_FUNCTION(TexFlags, CGxTexFlags_Addresses::ADDR_TEX_FLAGS, __thiscall, uint32_t,
+		(int a1, int a2, int a3, int a4, int a5, int a6, int a7, char* a8, int a9))
 }
 
 namespace CCharacterComponent

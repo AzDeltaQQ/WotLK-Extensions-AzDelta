@@ -331,10 +331,14 @@ namespace CM2Model_Addresses {
 
 namespace CTexture_Addresses {
 		constexpr uintptr_t ADDR_TEXTURE_CREATE_3 = 0x4B9760;
+		constexpr uintptr_t ADDR_TEXTURE_CREATE = 0x4B8C80;
+		constexpr uintptr_t ADDR_TEXTURE_CREATE_BLOB = 0x4B8D70;
+		constexpr uintptr_t ADDR_TEXTURE_CREATE_SOLID = 0x4B9550;
 }
 
 namespace CGxTexFlags_Addresses {
-		constexpr uintptr_t ADDR_CONSTRUCTOR = 0x4B9760;
+		constexpr uintptr_t ADDR_CONSTRUCTOR = 0x681BE0;
+		constexpr uintptr_t ADDR_TEX_FLAGS = 0x4B9200;
 }
 
 namespace CCharacterComponent_Addresses {
