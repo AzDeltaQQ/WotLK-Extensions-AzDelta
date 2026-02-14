@@ -1,48 +1,148 @@
-# WotLK-Extensions  
-Client extension project, independent from TSWoW.  
-  
-Cmake files based on TSWoW's [ClientExtensions](https://github.com/tswow/tswow/tree/master/misc/client-extensions).  
-  
-### Patcher.exe  
-In essence, it's [WoWFix335](https://github.com/robinsch/WoWFix335) by Robinsch, so most credits to him.  
-  
-Most of patch content should probably be credited to FrostAtom, [AwesomeWotlk](https://github.com/FrostAtom/awesome_wotlk/blob/main/src/AwesomeWotlkPatch/Patch.h) is where I've got dll loading from.  
-  
-Exe header data recalculated using [CFF Explorer VIII](https://ntcore.com/explorer-suite/).  
-  
-### WotLKExtensions.dll  
-Various runtime patches, as well as functionality extensions, all but one configurable from *PatchConfig.h* file. **By default all of the patches are turned off!**  
-Will be periodically updated, obviously (but no promises how ofted, depends on various factors). A lot can probably added. Even more could probably be improved.  
-  
-**Disclaimer:** Good point brought by Robinsh on Discord: `Use it with caution because some servers definitely scan the ebp for LUA calls and this will trigger it and might ban your account if using it.` This project was created as something to use (and distribute) with your own private server project rather than to use with existing ones (unless distributed by them), so keep that in mind. If you get yourself banned, you've been warned :P.  
-  
-**Patches:**  
-+ No Ammo - disables ammo requirement for ranged weapons; may require server core edits to fix ammo display (if not edited, without ammo in ammo slot weapons will shot invisible arrows/bullets); requires core edit to patch out server side `Out of Ammo` error message  
-+ More than 21 races crashfix - self-explanatory, allows to have up to 31 playable races in creation screen without crashes upon selecting them  
-+ Combo point fix - allows every class to utilise combo points  
-+ More than 12 classes in LFD - original role table stores only 12 (technically 13 if you count ID == 0) class bytes representing LFD roles, this patch expands it to 31; overriden by `LFGRoles` DBC if option is enabled  
-+ Item mod expansion - normally newly added item mods are not properly displayed by the client, unless you repurpose existing ones; this patch allows adding custom string to the table that wil be read from GlobalStrings.lua (where it also needs to be implemented)  
-+ WoWTime patch - mandatory patch, fixing issues with incorrect calendar and date (or even client crashes) as soon as 1.1.2031 hits
-  
-**Custom Lua Functions**  
-Various new or backported Lua functions - see `Docs` directory for further details.  
-  
-**Custom DBC Manager**  
-What started as a code written in assembly sparked an idea of writing openly available DBC loader that's already in use by Duskhaven, being ported to main TSWoW repository, and now added to this project. See `Docs` directory for more info.  
+# WotLK-Extensions
 
-**Custom Packets**  
-Dll can handle new data received from and sent to server. See `Docs` for more info.  
-  
-### Credits/Acknowledgements  
-In no particular order:  
-[Tester](https://github.com/TesterWoWDev) - huge help with DBC manager, as well as various other things  
-[Robinsch](https://github.com/robinsch) - patcher code, various client patches  
-[Nix](https://github.com/NixAJ)  
-[Deamon](https://github.com/Deamon87)  
-[Natrist](https://github.com/natrist) - (see, it is possible to release smth :P)  
-[DrFrugal (aka 4bhorrent)](https://drfrugal.xyz/) - what I can mention here, [video](https://www.youtube.com/watch?v=9qsCw3Y0-g4) explaining render flags, saved me some research time  
-[Titi](https://gitlab.com/T1ti) - some ideas what to add (for example, dehardcoding lfg roles from Wow.exe)  
-[M'Dic](https://github.com/acidmanifesto) - c'mon, who wouldn't  
-*A certain furry* whose empty promises with zero real results ultimately pushed me towards reverse engineering; you may or may not know who you are if you ever read this :P  
-Guys in WoW Modding Community Discord, reverse engineering channel: Natrist (again ;]), balake, Ike for help while I was trying to figure out custom packets  
-[I'm probably forgetting a bunch of people, I will add you when I remember](https://github.com/Alyst3r/WotLK-Extensions)  
+Client extension project for the 3.3.5a client of World of Warcraft.
+
+---
+
+## About This Repository
+
+This repository is a fork and continuation of prior 3.3.5a client extension work.  
+It builds upon foundations laid by:
+
+- **TSWoW ClientExtensions**  
+- **WoWFix335** by [Robinsch](https://github.com/robinsch)  
+- **AwesomeWotlk Patch** by [FrostAtom](https://github.com/FrostAtom)
+
+The original groundwork and patching infrastructure remain credited to their respective authors.  
+This repository preserves that functionality while extending it with additional runtime systems and development tooling.
+
+---
+
+## What This Fork Adds
+
+Since forking, the following features were added:
+
+- **DBC Hot Reloading** (reload DBC data without restarting the client)  
+- **Runtime Item Name Hot-Patching**  
+- **Additional Custom Lua Functions**  
+- **Extended client-side packet handling**  
+- **Internal improvements and refactoring for modularity**
+
+These additions are independent extensions and do not replace or invalidate the original implementations.
+
+---
+
+## Project Structure
+
+### Patcher.exe
+
+Primarily based on **WoWFix335** by Robinsch.  
+Most patching logic originates from that project.
+
+DLL loading approach derived from **AwesomeWotlk** by FrostAtom.
+
+Executable header data recalculated using CFF Explorer VIII.
+
+---
+
+### WotLKExtensions.dll
+
+Contains runtime patches and functionality extensions.  
+Most patches are configurable via `PatchConfig.h`.
+
+**Important:**  
+All patches are disabled by default.
+
+This DLL is intended primarily for use in your own private server environment or projects that explicitly distribute it.
+
+---
+
+## Disclaimer
+
+(Robinsch)
+Some servers may scan the EBP stack for Lua calls.  
+Using this DLL on servers that do not explicitly allow client modifications may result in account bans.
+
+Use at your own discretion.
+
+---
+
+## Patches
+
+- **No Ammo** – disables ammo requirement for ranged weapons; may require server core edits.  
+- **More Than 21 Races Crashfix** – allows up to 31 playable races in character creation without crashes.  
+- **Combo Point Fix** – allows every class to utilize combo points.  
+- **More Than 12 Classes in LFD** – expands role table to handle more than 12 classes; can be overridden by `LFGRoles` DBC.  
+- **Item Mod Expansion** – allows custom item mods to be displayed properly through GlobalStrings.lua.  
+- **WoWTime Patch** – fixes calendar/date issues and potential client crashes.
+
+See source and documentation for full technical details.
+
+---
+
+## Custom Lua Functions
+
+Adds new and backported Lua functions.  
+See the `Docs` directory for documentation.
+
+---
+
+## Custom DBC Manager
+
+Includes a DBC loading and management system, expanded with hot-reload capabilities in this fork.  
+
+See `Docs` for implementation details.
+
+---
+
+## Custom Packets
+
+Allows the client to handle new data sent to and from the server.  
+See `Docs` for more information.
+
+---
+
+## Repo Team
+
+This fork is actively maintained by:
+
+- [Sylian1337](https://github.com/Sylian1337)  
+- [AzDeltaQQ](https://github.com/AzDeltaQQ)
+
+We’re both working on adding new features, improving the DLL, and keeping the project alive.  
+
+---
+
+## Upstream Projects
+
+This project builds upon:
+
+- [WoWFix335](https://github.com/robinsch/WoWFix335)  
+- [AwesomeWotlk](https://github.com/FrostAtom/awesome_wotlk)  
+- [TSWoW](https://github.com/tswow/tswow)
+- [WoTLK-Extension](https://github.com/Alyst3r/WotLK-Extensions)
+
+If you are looking for the original implementations, please refer to the above repositories.
+
+---
+
+## Credits & Acknowledgements
+
+**Original groundwork and patching infrastructure:**
+
+- [Robinsch](https://github.com/robinsch) – WoWFix335, client patch research  
+- [FrostAtom](https://github.com/FrostAtom) – AwesomeWotlk patch implementation  
+- TSWoW contributors
+- [Alyst3r](https://github.com/Alyst3r/WotLK-Extensions) - Porting TSWoW extention into DLL.
+- [Tester](https://github.com/TesterWoWDev) – DBC manager collaboration and development support  
+- Nix  
+- Deamon  
+- Natrist  
+- [DrFrugal (4bhorrent)](https://drfrugal.xyz/) – research resources and documentation  
+- [Titi](https://gitlab.com/T1ti) – design ideas and dehardcoding concepts  
+- M'Dic  
+- WoW Modding Community (Reverse Engineering channel)
+
+If anyone is missing, feel free to open an issue and contributions will be added.
+
+---
