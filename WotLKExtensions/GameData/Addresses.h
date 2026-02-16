@@ -333,14 +333,149 @@ namespace CGPlayer_Vitrual_Functions {
 
 }
 
+// Implemented by xidk
+// CM2SceneRender pipeline (RE): Draw(0x823130) loops elements, sets m_model/m_skin from elem, dispatches by elem->m_type.
+// DrawBatch(0x8203B0): sets m_currentBatch(0x88), m_skinSection(0x90), computes m_textureDef(0x98); then SetupLighting, SetupMaterial, BindPassTextures.
+// BindPassTextures(0x81F450) called from DrawBatch+6B, DrawBatchProj+2BF, DrawBatchDoodad+6C, DrawRibbon+5F, DrawCallback+6.
+namespace CM2SceneRender_Addresses {
+	constexpr uintptr_t ADDR_DRAW = 0x823130;             // void __thiscall Draw(this, viewMatrix, elementPool, indices, count) - main render loop
+	constexpr uintptr_t ADDR_SETUP_LIGHTING = 0x81FB10;   // void __thiscall SetupLighting(this)
+	constexpr uintptr_t ADDR_SETUP_TEXTURES = 0x81F450;   // BindPassTextures
+	constexpr uintptr_t ADDR_DRAW_BATCH = 0x8203B0;       // DrawBatch - type 0
+	constexpr uintptr_t ADDR_DRAW_BATCH_PROJ = 0x820720;  // DrawBatchProj - type 1
+	constexpr uintptr_t ADDR_DRAW_BATCH_DOODAD = 0x820AE0; // DrawBatchDoodad - type 2
+	constexpr uintptr_t ADDR_DRAW_RIBBON = 0x820F40;      // DrawRibbon - type 3
+	constexpr uintptr_t ADDR_DRAW_PARTICLE = 0x8214E0;   // DrawParticle - type 4
+	constexpr uintptr_t OFF_MODEL = 0x48;                 // CM2Model* m_model - set in Draw from elem->m_model
+	constexpr uintptr_t OFF_ELEMENT = 0x50;               // M2RenderElement* m_element
+	constexpr uintptr_t OFF_PASS_INDEX = 0x58;            // uint32_t m_passIndex
+	constexpr uintptr_t OFF_SKIN = 0x60;                  // CM2Skin* m_skin - set in Draw from elem->m_model->m_skin
+	constexpr uintptr_t OFF_MODEL_FROM_DRAW = 0x60;       // alias: some paths may store model here; RE says 0x60 = m_skin
+	constexpr uintptr_t OFF_SHARED = 0x68;               // CM2Shared* m_shared
+	constexpr uintptr_t OFF_LIGHTING_SOURCE = 0x70;       // CM2Lighting* - from m_model->m_lighting (0x1D4)
+	constexpr uintptr_t OFF_BATCH = 0x88;                // M2Batch* m_currentBatch
+	constexpr uintptr_t OFF_SKIN_SECTION = 0x90;         // M2SkinSection* m_skinSection - from elem->m_skinSection (0x2C)
+	constexpr uintptr_t OFF_BATCH_DATA = 0x98;           // void* m_textureDef / batch data - (flags&1)==0 → use local lighting
+	constexpr uintptr_t OFF_TEXTURE_DEF = 0x98;          // alias - DrawBatch sets from batch->textureLookupId
+	constexpr uintptr_t OFF_BATCH_TEXTURE_COUNT = 0x0E;   // uint16_t M2Batch.textureCount
+	constexpr uintptr_t OFF_BATCH_TEXTURE_LOOKUP_ID = 0x10; // uint16_t M2Batch.textureLookupId
+	constexpr uintptr_t OFF_SKIN_TEXTURE_LIST = 0xA4;    // CTexture** CM2Skin::m_textureList
+}
+
+// Implemented by xidk
+// M2RenderElement: stride 68. +0x00 m_type, +0x04 m_model, +0x18 m_batch, +0x2C m_skinSection.
+namespace M2RenderElement_Offsets {
+	constexpr uintptr_t OFF_TYPE = 0x00;
+	constexpr uintptr_t OFF_MODEL = 0x04;
+	constexpr uintptr_t OFF_BATCH = 0x18;
+	constexpr uintptr_t OFF_SKIN_SECTION = 0x2C;
+	constexpr uintptr_t STRIDE = 68;
+}
+
+// Implemented by xidk
+// M2SkinSection: geometry batch. boneCount at +0x0A; set to 0 to skip hardware skinning loop (static mesh).
+namespace M2SkinSection_Offsets {
+	constexpr uintptr_t OFF_BONE_COUNT = 0x0A;  // uint16_t - skinning loop uses this; 0 = no bones = no crash
+}
+
+// Implemented by xidk
+// Draw (0x823130): at 0x823A1D sets ctx+0x60 = elem->m_model (sheep); at 0x823A60 sets ctx+0x48 = shared->m_parent (player).
+// BindPassTextures then uses 0x48 for lookup (model+0x84) and 0x60 for tex list (model+0xA4) -> index mismatch for attachments.
+namespace CM2Shared_Offsets {
+	constexpr uintptr_t OFF_PARENT = 0x150;  // CM2Model* m_parent - Draw injects this into ctx+0x48
+}
+
+// Implemented by xidk
+// Texture loading and binding - from IDA analysis of Build 12340
+namespace TextureLoader_Addresses {
+	constexpr uintptr_t ADDR_TEXTURE = 0x004B9760;        // int __cdecl texture(filename, flags, status, unk)
+	constexpr uintptr_t ADDR_TEXTURE_RELEASE = 0x0047BF30; // void __cdecl TextureRelease(void* pTexture) - validated 1-arg refcount release
+	constexpr uintptr_t ADDR_SOLID_WHITE_TEXTURE = 0x00AC3354; // CTexture* g_solidWhiteTexture - fallback when file not found
+	constexpr uintptr_t ADDR_TEXTURE_GET_GX_TEX = 0x004B6CB0; // CGxTex* __cdecl TextureGetGxTex(CTexture* tex, int, int) - gets hardware texture handle
+}
+
+// Implemented by xidk
+// Graphics device and texture binding
+namespace GraphicsDevice_Addresses {
+	constexpr uintptr_t ADDR_CGXDEVICE_RS_SET = 0x00685F50; // void __thiscall CGxDevice::RsSet(this, state, value) - sets render state
+	constexpr uintptr_t GLOBAL_GX_DEVICE_PTR = 0x00C5DF88; // CGxDevice* g_theGxDevicePtr - global graphics device
+	constexpr uint32_t GxRs_Texture0 = 21;                // First texture unit
+}
+
+// Implemented by xidk
+// Shader UV matrix: parent context can set wrong UV scale/scroll -> texture sampled at 0,0 or off-image -> white.
+// Set to 0 to disable. 0x873480 = SetTexMtx_Identity(int slot) per RE.
+namespace ShaderEffect_Addresses {
+	constexpr uintptr_t ADDR_SET_TEX_MTX_IDENTITY = 0x00873480; // void __cdecl SetTexMtx_Identity(int slot) - force identity UV; 0 to disable
+}
+
+
 namespace CM2Scene_Addresses {
 	constexpr uintptr_t ADDR_ATTACH_PARENT = 0x831630;
 }
 
 namespace CM2Model_Addresses {
 	constexpr uintptr_t ADDR_CREATE_MODEL = 0x81F8F0;
-	constexpr uintptr_t ADDR_REPLACE_TEXTURE = 0x825260;
 	constexpr uintptr_t ADDR_INIT_LOADED = 0x832EA0;
+
+
+	// Implemented by xidk
+	// Verified addresses for Build 12340 from IDA Pro analysis
+	constexpr uintptr_t ADDR_IS_LOADED = 0x824F00;
+	constexpr uintptr_t ADDR_IS_RENDER_READY = 0x824FC0;   // int __thiscall (pModel, loadData, checkChildren) - GATEKEEPER for rendering
+	constexpr uintptr_t ADDR_IS_DRAWABLE = 0x824FC0;       // bool __thiscall (pModel, wait, checkChildren) - same as ADDR_IS_RENDER_READY
+	constexpr uintptr_t ADDR_WAIT_FOR_LOAD = 0x823ED0;    // int __thiscall (pModel, int) - blocks until async load completes; calls PostLoadInit if m_instanceFlags & 0x20
+	constexpr uintptr_t ADDR_SET_ANIMATING = 0x823F10;    // void __thiscall (pModel, bool) - adds/removes model from scene animation list (m_scene+0x28)
+	constexpr uintptr_t ADDR_REPLACE_TEXTURE = 0x825260;   // void __thiscall (pModel, slot, hTexture)
+	constexpr uintptr_t ADDR_INITIALIZE_LOADED = 0x832EA0; // void __thiscall (pModel) - PostLoadInit: allocates bones/matrices/textures, builds runtime state
+	constexpr uintptr_t ADDR_UPDATE_RENDER_BATCHES = 0x97FAD0; // int __thiscall (pBatch, slot, hTexture) - directly updates GPU batches
+	constexpr uintptr_t ADDR_SET_BONE_SEQUENCE = 0x825EE0;  // CheckSequenceId(pModel, sequenceId) - wrong for PlayBoneAnimation
+	constexpr uintptr_t ADDR_PLAY_BONE_SEQUENCE = 0x832AB0; // void __thiscall SetBoneSequence(this, boneId, animId, variationId, startTime, speed, transitionTime, flags)
+	constexpr uintptr_t ADDR_IS_ANIMATION_VALID = 0x826A60;
+	constexpr uintptr_t ADDR_GET_ATTACHMENT_POS = 0x827460;
+	constexpr uintptr_t ADDR_ANIMATE = 0x830DC0;
+	constexpr uintptr_t ADDR_FORCE_ANIMATE = 0x830F90;
+	constexpr uintptr_t ADDR_ATTACH_TO_PARENT = 0x831630;
+	constexpr uintptr_t ADDR_ATTACH_TO_SCENE = 0x834540;  // void __thiscall (pModel, pScene) - links model into scene+8 list; when loaded, inits lights and PlayBoneAnimation
+	constexpr uintptr_t ADDR_SETUP_LIGHTING = 0x831AF0;   // void __thiscall CM2Model::UpdateLighting(this) - fills m_lighting at +0x1D4 (same as SetupLighting)
+
+	// Verified offsets
+	constexpr uintptr_t OFF_INSTANCE_FLAGS = 0x04;  // m_instanceFlags - Bit 0x20: PostLoadRequired (WaitForLoad calls PostLoadInit when set)
+	constexpr uintptr_t OFF_ALPHA = 0x178;  // Verified from CGUnit_C::ReleaseMissiles at 0x72DF5B
+	constexpr uintptr_t OFF_FLAGS = 0x10;   // m_statusFlags - visibility/state (Bit 0: Loaded, Bit 2: TexturesReady)
+	constexpr uint32_t FLAG_POST_LOAD_REQUIRED = 0x20; // OFF_INSTANCE_FLAGS - must set before WaitForLoad so it runs PostLoadInit
+	constexpr uintptr_t OFF_CALLBACK_BONE_IDX = 0x14; // uint16_t - set 0xFFFF to disable callbacks on standalone model
+	constexpr uint32_t FLAG_VISIBLE = 0x8000;
+	constexpr uint32_t FLAG_HAS_CALLBACKS = 0x400000; // Clear to avoid ProcessCallbacks crash on standalone model
+	constexpr uint32_t FLAG_INITIALIZED = 0x1; // Bit 0: Model has completed InitializeLoaded
+	constexpr uint32_t FLAG_OPTIMIZED = 0x10; // When set, prevents geometry rebuild
+	constexpr uintptr_t OFF_SCENE = 0x28;        // CM2Scene* - required for SetupLighting/SelectLights
+	constexpr uintptr_t OFF_SHARED_DATA = 0x2C;  // M2ModelData* / M2Shared* - resource data, null until file loads
+	constexpr uintptr_t OFF_PENDING_CMDS = 0x34; // M2Command* head
+	constexpr uintptr_t OFF_PENDING_TAIL = 0x38; // M2Command** tail
+	constexpr uintptr_t OFF_BONES = 0x94; // CBoneInstance* array
+	constexpr uintptr_t OFF_BONE_LOOKUP = 0x7C;  // animation bone indices - DrawBatch skinning loop (0x82048D) uses with 0x48
+	constexpr uintptr_t OFF_BONE_MATRICES = 0x98; // C44Matrix* array - DrawBatch skinning loop uses with 0x60
+	constexpr uintptr_t OFF_GEOSET_VIS = 0x9C; // uint32_t* visibility bitmask
+	constexpr uintptr_t OFF_NUM_TEXTURES = 0x50;   // uint32_t - used by BindPassTextures for texId bounds
+	constexpr uintptr_t OFF_TEXTURE_LOOKUP = 0x84;  // uint16_t* - batch uses textureLookupId + unit to index this
+	constexpr uintptr_t OFF_TEXTURE_OVERRIDE_ARRAY = 0xA4; // CTexture** array
+	constexpr uintptr_t OFF_WORLD_TRANSFORM = 0xB4; // C44Matrix
+	constexpr uintptr_t OFF_NEXT_IN_SCENE = 0x44;   // CM2Model* next for animation list (scene+0x28)
+	constexpr uintptr_t OFF_NEXT_IN_RENDER = 0x6C;  // CM2Model* next for RENDER list (scene+0x2C) - loop 0x821C50
+	constexpr uintptr_t OFF_PREV_IN_SCENE = 0x40;   // CM2Model* prev - Animate clears [ecx+40h],[ecx+44h] at 0x821C1A
+	constexpr uint32_t FLAG_HIDDEN = 0x4000;        // If set at 0x10, render loop skips (0x821C7F)
+	constexpr uintptr_t OFF_PARENT = 0x48;          // CM2Model* m_parent - if non-NULL, Animate skips UpdateLighting (treat as root = set to NULL)
+	constexpr uintptr_t OFF_RENDER_BATCHES = 0x2BC; // Pointer to array of render batch pointers
+	constexpr uintptr_t OFF_RENDER_BATCH_COUNT = 0x2B8; // Number of render batches
+	constexpr uintptr_t OFF_OPTIMIZED_GEOM = 0x2D0; // void* - hardware buffer batch
+	constexpr uintptr_t OFF_LIGHTING = 0x1D4;       // CM2Lighting / lighting state - SetupLighting reads this; only first 128 bytes used
+	constexpr uintptr_t OFF_LIGHTING_SIZE = 128;    // Copy only 128 bytes (32 floats). Full struct is 0xD4; copying more overwrites m_centerOffset (0x292) and corrupts rendering (white model).
+	constexpr uintptr_t OFF_M_POSITION = 0x124;     // C3Vector - position used by UpdateLighting (TransformPoint then BeginFrame/SelectLights); set to world X,Y,Z
+	constexpr uintptr_t OFF_CENTER_OFFSET = 0x292;  // C3Vector - lighting center; we also set 0x124 (m_position) as that is what UpdateLighting uses for SelectLights
+	constexpr uintptr_t OFF_VISIBILITY_RADIUS = 0x118;  // float - visibility/bounding sphere radius for culling
+	constexpr uintptr_t OFF_VISIBILITY_MIN = 0x10C;     // C3Vector - bounding box min for frustum culling
+	constexpr uintptr_t OFF_VISIBILITY_MAX = 0x11C;     // C3Vector - bounding box max for frustum culling
 }
 
 namespace CTexture_Addresses {
