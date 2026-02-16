@@ -263,13 +263,27 @@ namespace DBCAddresses
 	constexpr uintptr_t ZONEMUSICDB = 0x00AD4FB8;
 }
 
-namespace CacheAddresses {
-	constexpr uintptr_t ITEMCACHE = 0xC5D828;
+namespace DBCacheAddresses 
+{
+	// GetInfoByID functions
+	constexpr uintptr_t DB_CREATURE_CACHE_GETINFOBYID = 0x67B6A0;
+	constexpr uintptr_t DB_GAMEOBBJECT_CACHE_GETINFOBYID = 0x67BD40;
+	constexpr uintptr_t DB_ARENA_TEAM_CACHE_GETINFOBYID = 0x67C3E0;
+	constexpr uintptr_t DB_ITEM_CACHE_GETINFOBYID = 0x67CA30;
+	constexpr uintptr_t DB_NPC_CACHE_GETINFOBYID = 0x67D0D0;
+	constexpr uintptr_t DB_NAME_CACHE_GETINFOBYID = 0x67D770;
+	constexpr uintptr_t DB_GUILD_CACHE_GETINFOBYID = 0x67D930;
+	constexpr uintptr_t DB_QUEST_CACHE_GETINFOBYID = 0x67DE90;
+	constexpr uintptr_t DB_ITEMNAME_CACHE_GETINFOBYID = 0x67E3E0;
+	constexpr uintptr_t DB_PETNAME_CACHE_GETINFOBYID = 0x67EA30;
+	constexpr uintptr_t DB_ITEMTEXT_CACHE_GETINFOBYID = 0x67F4C0;
+	constexpr uintptr_t DB_PAGETEXT_CACHE_GETINFOBYID = 0x680170;
+	constexpr uintptr_t DB_DANCE_CACHE_GETINFOBYID = 0x6806D0;
 }
 
 namespace FuncAddresses {
 
-	constexpr uintptr_t DB_ITEM_CACHE_GET_INFO_BLOCK_BY_ID = 0x67CA30;
+	
 
 
 	// Functions
